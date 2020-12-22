@@ -1,0 +1,72 @@
+name: Graffiti
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Change Default Branch to main
+        uses: octokit/request-action@v2.x
+        with:
+          route: PATCH /repos/{owner}/{repo}
+          owner: aaronosher
+          repo: abolish-ice
+          name: abolish-ice
+          default_branch: main
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+  refresh:
+    needs: prepare
+    
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Configure git
+        run: git config --global user.name "Aaron Osher"; git config --global user.email "git@aaronosher.io"
+
+      - name: Initialize Git Repo
+        run: git init; git remote add origin https://${{github.actor}}:${{github.token}}@github.com/aaronosher/abolish-ice.git
+
+      - name: Checkout Origin main
+        run: git fetch origin; git checkout main
+
+      - name: Checkout empty drop-ice branch
+        run: git checkout -b drop-ice
+
+      - name: Update dates.txt
+        run: ./dates.sh < dow.txt > dates.txt
+
+      - name: Paint
+        run: ./paint.sh
+        env:
+          username: aaronosher
+        
+      - name: Force Push
+        run: git push -f origin drop-ice
+
+  cleanup:
+    needs: refresh
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Change Default Branch to main
+        uses: octokit/request-action@v2.x
+        with:
+          route: PATCH /repos/{owner}/{repo}
+          owner: aaronosher
+          repo: abolish-ice
+          name: abolish-ice
+          default_branch: drop-ice
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      

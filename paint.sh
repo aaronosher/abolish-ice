@@ -34,15 +34,3 @@ do
 		git commit --date="$d $tm" -m "$i on $d" --no-gpg-sign --allow-empty
 	done
 done < "$(dirname "$0")/dates.txt"
-
-# Get remote name
-a="$(git rev-parse --abbrev-ref HEAD@{u} || echo origin/"$(git rev-parse --abbrev-ref HEAD)")"
-remote="${a%%/*}"
-remote="${remote:-origin}"
-branch="${a#*/}"
-branch="${branch:-main}"
-git push "$remote" HEAD:"$branch"
-
-if [ $? -ne 0 ] ; then
-    echo "'git push' failed: please push the current branch to the default branch of a valid github repository"
-fi
